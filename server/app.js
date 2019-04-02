@@ -54,7 +54,6 @@ app.get('/links',
   });
 
 app.post('/links',
-  Auth.verifySession,
   (req, res, next) => {
     var url = req.body.url;
     if (!models.Links.isValidUrl(url)) {
