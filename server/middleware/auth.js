@@ -2,7 +2,7 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 const createNewSession = (req, res, next) => {
-  models.Sessions.create()
+  return models.Sessions.create()
     .then(data => {
       return models.Sessions.get({
         id: data.insertId,
@@ -11,8 +11,6 @@ const createNewSession = (req, res, next) => {
     .then(data => {
       req.session = { hash: data.hash };
       res.cookie('shortlyid', data.hash);
-    })
-    .then(() => {
       return next();
     })
     .catch(err => {
@@ -33,14 +31,16 @@ module.exports.createSession = (req, res, next) => {
             id: data.userId,
           });
         } else {
-          createNewSession(req, res, next);
+          return createNewSession(req, res, () => {
+            return;
+          });
         }
       })
       .then(userData => {
         if (userData && userData.username) {
           req.session['user'] = { username: userData.username};
-          return next();
         }
+        return next();
       })
       .catch(err => {
         throw err;
