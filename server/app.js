@@ -19,13 +19,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 
-
 app.get('/',
+  Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
 
 app.get('/create',
+  Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
@@ -41,6 +42,7 @@ app.get('/signup',
   });
 
 app.get('/links', 
+  Auth.verifySession,
   (req, res, next) => {
     models.Links.getAll()
       .then(links => {
@@ -51,7 +53,8 @@ app.get('/links',
       });
   });
 
-app.post('/links', 
+app.post('/links',
+  Auth.verifySession,
   (req, res, next) => {
     var url = req.body.url;
     if (!models.Links.isValidUrl(url)) {
@@ -113,28 +116,33 @@ app.post('/signup', (req, res, next) => {
     });
 });
 
-app.post('/login', (req, res, next) => {
-  models.Users.get({ username: req.body.username })
-    .then(data => {
-      if (data && models.Users.compare(req.body.password, data.password, data.salt)) {
-        models.Sessions.update({ hash: req.session.hash }, { userId: data.id })
-          .then(() => {
-            res.redirect('/');
-          });
-      } else {
-        res.redirect('/login');
-      }
-    })
-    .catch(err => {
-      res.status(500).send(err);
-    });
-});
+app.post('/login', 
+  (req, res, next) => {
+    models.Users.get({ username: req.body.username })
+      .then(data => {
+        if (data && models.Users.compare(req.body.password, data.password, data.salt)) {
+          models.Sessions.update({ hash: req.session.hash }, { userId: data.id })
+            .then(() => {
+              res.redirect('/');
+            });
+        } else {
+          res.redirect('/login');
+        }
+      })
+      .catch(err => {
+        res.status(500).send(err);
+      });
+  }
+);
 
-app.get('/logout', (req, res, next) => {
-  Auth.destroySession(req, res, () => {
-    res.redirect('/login');
-  });
-});
+app.get('/logout',
+  Auth.verifySession,
+  (req, res, next) => {
+    Auth.destroySession(req, res, () => {
+      res.redirect('/login');
+    });
+  }
+);
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail

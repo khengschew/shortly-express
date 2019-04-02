@@ -69,6 +69,9 @@ module.exports.destroySession = (req, res, next) => {
 };
 
 module.exports.verifySession = (req, res, next) => {
-  // If not verified, redirect to '/login'
-  // Else call next()
+  if (models.Sessions.isLoggedIn(req.session)) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
 };
