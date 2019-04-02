@@ -25,11 +25,14 @@ module.exports.createSession = (req, res, next) => {
       hash: req.cookies.shortlyid,
     })
       .then(data => {
-        if (data && data.userId) {
-          req.session['userId'] = data.userId;
-          return models.Users.get({
-            id: data.userId,
-          });
+        if (data) {
+          res.cookie('shortlyid', data.hash);
+          if (data.userId) {
+            req.session['userId'] = data.userId;
+            return models.Users.get({
+              id: data.userId,
+            });
+          }
         } else {
           return createNewSession(req, res, () => {
             return;
