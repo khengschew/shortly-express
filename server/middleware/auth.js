@@ -54,6 +54,17 @@ module.exports.createSession = (req, res, next) => {
 // Add additional authentication middleware functions below
 /************************************************************/
 
+module.exports.destroySession = (req, res, next) => {
+  models.Sessions.delete({ hash: req.cookies.shortlyid })
+    .then(() => {
+      res.clearCookie('shortlyid');
+      next();
+    })
+    .catch(err => {
+      throw err;
+    });
+};
+
 module.exports.verifySession = (req, res, next) => {
   // If not verified, redirect to '/login'
   // Else call next()

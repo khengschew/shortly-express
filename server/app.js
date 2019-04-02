@@ -102,7 +102,10 @@ app.post('/signup', (req, res, next) => {
     })
     .then(data => {
       if (data) {
-        res.redirect('/');
+        models.Sessions.update({ hash: req.session.hash }, { userId: data.insertId })
+          .then(() => {
+            res.redirect('/');
+          });
       }
     })
     .catch(err => {
@@ -114,8 +117,10 @@ app.post('/login', (req, res, next) => {
   models.Users.get({ username: req.body.username })
     .then(data => {
       if (data && models.Users.compare(req.body.password, data.password, data.salt)) {
-        // Save session token
-        res.redirect('/');
+        models.Sessions.update({ hash: req.session.hash }, { userId: data.id })
+          .then(() => {
+            res.redirect('/');
+          });
       } else {
         res.redirect('/login');
       }
@@ -125,6 +130,11 @@ app.post('/login', (req, res, next) => {
     });
 });
 
+app.get('/logout', (req, res, next) => {
+  Auth.destroySession(req, res, () => {
+    res.redirect('/login');
+  });
+});
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
